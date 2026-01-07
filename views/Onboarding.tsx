@@ -26,17 +26,18 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     const [targetWeight, setTargetWeight] = useState<string>('');
     const [goal, setGoal] = useState<GoalType>('GAIN_MUSCLE');
     const [frequency, setFrequency] = useState(4);
-    const [useAI, setUseAI] = useState<boolean | null>(null);
+    // Removed useAI state to avoid race condition, passed as argument instead
 
     const handleNext = () => {
         if (step < steps.length - 1) {
             setStep(step + 1);
         } else {
-            handleFinish();
+            // Default behavior if next is clicked on last step (though last step has custom buttons)
+            handleFinish(false);
         }
     };
 
-    const handleFinish = async () => {
+    const handleFinish = async (shouldUseAI: boolean) => {
         setIsLoading(true);
 
         const newProfile: UserProfile = {
@@ -55,7 +56,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
 
         let newSchedule: WorkoutDay[] = [];
 
-        if (useAI) {
+        if (shouldUseAI) {
             // Generate via Gemini
             try {
                 newSchedule = await generateFullRoutine(newProfile);
@@ -266,7 +267,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         <div className="space-y-3 pt-4">
                             <p className="text-center text-sm font-bold text-white mb-2">Como montar seu treino?</p>
                             <button 
-                                onClick={() => { setUseAI(true); handleFinish(); }}
+                                onClick={() => handleFinish(true)}
                                 className="w-full p-4 bg-gradient-to-r from-neon-purple to-purple-600 rounded-xl flex items-center justify-between group hover:opacity-90"
                             >
                                 <div className="text-left">
@@ -280,7 +281,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                             </button>
 
                             <button 
-                                onClick={() => { setUseAI(false); handleFinish(); }}
+                                onClick={() => handleFinish(false)}
                                 className="w-full p-4 bg-neutral-800 rounded-xl flex items-center justify-between hover:bg-neutral-700"
                             >
                                 <div className="text-left">

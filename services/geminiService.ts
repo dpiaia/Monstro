@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { Exercise, WorkoutDay, UserProfile } from "../types";
 
 // Declare process manually to avoid TypeScript errors in client-side code 
@@ -10,8 +10,6 @@ declare const process: {
 };
 
 // Helper to get AI instance safely.
-// This prevents the app from crashing with a white/black screen on startup 
-// if the API_KEY environment variable is missing in Vercel.
 const getAI = () => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
@@ -108,39 +106,47 @@ export const generateFullRoutine = async (profile: UserProfile): Promise<Workout
             - Training Frequency: ${profile.workoutFrequency} days per week.
             - Level: Beginner/Intermediate.
             
-            Output a JSON ARRAY representing 7 days (Monday to Sunday).
+            The output must adhere strictly to the schema provided.
             IMPORTANT: Use these specific IDs for days: 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'.
-            
-            Structure for each day:
-            {
-                "id": "mon",
-                "label": "Segunda",
-                "muscleGroup": "Name of workout or Rest",
-                "isRestDay": boolean,
-                "exercises": [
-                    {
-                        "name": "Exercise Name",
-                        "equipment": "Barbell/Dumbbell/Machine",
-                        "sets": number,
-                        "reps": "string range like 10-12",
-                        "tips": "short execution tip"
-                    }
-                ]
-            }
-            
-            Rules:
-            1. Create exactly 7 days.
-            2. Mark ${7 - profile.workoutFrequency} days as isRestDay: true.
-            3. Populate exercises ONLY for training days (3-6 exercises per day).
-            4. Language: Portuguese (PT-BR).
-            5. Provide a strict JSON response.
+            Ensure 7 days are created.
+            Mark rest days where isRestDay is true based on frequency.
+            Language: Portuguese (PT-BR).
         `;
+
+        const schema = {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    id: { type: Type.STRING, description: "Day ID: mon, tue, wed, thu, fri, sat, sun" },
+                    label: { type: Type.STRING, description: "Day label: Segunda, Terça..." },
+                    muscleGroup: { type: Type.STRING, description: "Focus of the day or Rest" },
+                    isRestDay: { type: Type.BOOLEAN },
+                    exercises: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                name: { type: Type.STRING },
+                                equipment: { type: Type.STRING },
+                                sets: { type: Type.NUMBER },
+                                reps: { type: Type.STRING },
+                                tips: { type: Type.STRING },
+                            },
+                            required: ["name", "equipment", "sets", "reps", "tips"]
+                        }
+                    }
+                },
+                required: ["id", "label", "muscleGroup", "isRestDay", "exercises"]
+            }
+        };
 
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: prompt,
             config: {
-                responseMimeType: 'application/json'
+                responseMimeType: 'application/json',
+                responseSchema: schema,
             }
         });
 
