@@ -298,6 +298,15 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
                                                         />
                                                     </div>
                                                 </div>
+                                                <div>
+                                                    <label className="text-[10px] text-gray-500 uppercase">Dicas de Execução</label>
+                                                    <textarea 
+                                                        className="w-full bg-neutral-800 border border-neutral-700 rounded p-1.5 text-white text-xs resize-y min-h-[60px] focus:border-neon-yellow focus:outline-none"
+                                                        value={exercise.tips}
+                                                        onChange={(e) => handleEditExerciseField(exercise.id, 'tips', e.target.value)}
+                                                        placeholder="Ex: Cotovelos fechados, descer devagar..."
+                                                    />
+                                                </div>
                                             </div>
                                         ) : (
                                             <>
