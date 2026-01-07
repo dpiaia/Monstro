@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserProfile, WorkoutDay } from '../types';
 import { getLevel } from '../constants';
 import { StatCard } from '../components/StatCard';
-import { Activity, Flame, Scale, ChevronRight, Trophy } from 'lucide-react';
+import { Activity, Flame, Scale, ChevronRight, Trophy, Quote } from 'lucide-react';
+import { getMotivationalTip } from '../services/geminiService';
 
 interface DashboardProps {
     profile: UserProfile;
@@ -11,6 +12,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ profile, todayWorkout, onGoToWorkout }) => {
+    const [motivationalQuote, setMotivationalQuote] = useState<string>("Sua única competição é quem você era ontem.");
     
     const exercisesDoneToday = todayWorkout?.exercises.filter(e => e.completed).length || 0;
     const totalExercisesToday = todayWorkout?.exercises.length || 0;
@@ -23,16 +25,53 @@ const Dashboard: React.FC<DashboardProps> = ({ profile, todayWorkout, onGoToWork
     const nextLevelPoints = currentLevel.maxPoints;
     const levelProgress = Math.min(100, (profile.dailyPoints / nextLevelPoints) * 100);
 
+    // Dynamic Greeting Logic
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 12) return "Bom dia";
+        if (hour >= 12 && hour < 18) return "Boa tarde";
+        return "Boa noite";
+    };
+
+    // Load generic motivation on mount
+    useEffect(() => {
+        getMotivationalTip("Mindset de Campeão").then(tip => {
+            if (tip) setMotivationalQuote(tip);
+        });
+    }, []);
+
     return (
-        <div className="p-6 space-y-8 animate-fade-in">
-            {/* Header */}
-            <header className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-sm text-gray-400 font-medium">Bem-vindo de volta,</h1>
-                    <h2 className="text-3xl font-bold text-white tracking-tight">{profile.name}</h2>
+        <div className="p-6 space-y-8 animate-fade-in pb-32">
+            {/* New Header Section */}
+            <header className="space-y-2">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h1 className="text-lg text-gray-400 font-medium tracking-wide">
+                            {getGreeting()},
+                        </h1>
+                        <h2 className="text-4xl font-bold text-white tracking-tight">
+                            {profile.name}
+                        </h2>
+                    </div>
+                    <div className="h-12 w-12 rounded-full bg-neon-purple flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-neon-purple/20 border-2 border-neutral-800">
+                        {profile.name.charAt(0)}
+                    </div>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-neon-purple flex items-center justify-center font-bold text-white shadow-lg shadow-neon-purple/20">
-                    {profile.name.charAt(0)}
+
+                {/* Streak Display */}
+                <div className="flex items-center space-x-2 pt-2">
+                    <Flame className="text-orange-500 fill-orange-500/20" size={24} />
+                    <span className="text-lg font-bold text-gray-200">
+                        Você está há <span className="text-orange-500 text-xl">{profile.streak}</span> dias em ofensiva.
+                    </span>
+                </div>
+
+                {/* Motivational Quote Card */}
+                <div className="mt-4 relative bg-neutral-900/80 border-l-4 border-neon-bright p-4 rounded-r-xl rounded-bl-xl shadow-lg">
+                    <Quote size={20} className="absolute top-2 right-2 text-neutral-700" />
+                    <p className="text-gray-300 italic text-sm font-medium pr-4">
+                        "{motivationalQuote}"
+                    </p>
                 </div>
             </header>
 
@@ -69,21 +108,12 @@ const Dashboard: React.FC<DashboardProps> = ({ profile, todayWorkout, onGoToWork
                     colorClass="text-neon-bright"
                 />
                 <StatCard 
-                    title="Ofensiva" 
-                    value={`${profile.streak} dias`} 
-                    subtitle="Não pare agora"
-                    icon={<Flame size={18} />}
-                    colorClass="text-orange-500"
+                    title="Perda Total" 
+                    value={`-${weightLost} kg`} 
+                    subtitle="Desde o início"
+                    icon={<Scale size={18} />}
+                    colorClass="text-neon-purple"
                 />
-                <div className="col-span-2">
-                    <StatCard 
-                        title="Progresso Peso" 
-                        value={`-${weightLost} kg`} 
-                        subtitle={`Meta: 78kg (Faltam ${(profile.currentWeight - 78).toFixed(1)}kg)`}
-                        icon={<Scale size={18} />}
-                        colorClass="text-neon-purple"
-                    />
-                </div>
             </div>
 
             {/* Today's Workout Card */}
