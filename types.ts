@@ -63,4 +63,4 @@ export interface UserProfile {
     dailyPoints: number; // Gamification points
 }
 
-export type Screen = 'HOME' | 'WORKOUT' | 'PROFILE' | 'SETTINGS' | 'ONBOARDING';
+export type Screen = 'HOME' | 'WORKOUT' | 'PROFILE' | 'SETTINGS' | 'ONBOARDING' | 'ANALYZER';

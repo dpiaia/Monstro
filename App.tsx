@@ -5,6 +5,7 @@ import WorkoutView from './views/WorkoutView';
 import Profile from './views/Profile';
 import Settings from './views/Settings';
 import Onboarding from './views/Onboarding';
+import EquipmentAnalyzer from './views/EquipmentAnalyzer';
 import { Screen, UserProfile, WorkoutDay, Exercise } from './types';
 import { INITIAL_PROFILE, MOCK_WORKOUT_SCHEDULE } from './constants';
 import { getPostWorkoutFeedback } from './services/geminiService';
@@ -221,6 +222,7 @@ const App: React.FC = () => {
                 profile={profile} 
                 todayWorkout={schedule.find(d => d.id === currentDayId)}
                 onGoToWorkout={() => setActiveScreen('WORKOUT')}
+                onGoToAnalyzer={() => setActiveScreen('ANALYZER')}
             />
         );
       case 'WORKOUT':
@@ -251,7 +253,11 @@ const App: React.FC = () => {
                 onExport={handleExportData}
                 onClear={handleClearData}
             />
-        )
+        );
+      case 'ANALYZER':
+        return (
+            <EquipmentAnalyzer onBack={() => setActiveScreen('HOME')} />
+        );
       default:
         return null;
     }

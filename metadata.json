@@ -1,5 +1,7 @@
 {
   "name": "Eu Monstro",
   "description": "A dark-mode, high-contrast workout tracker focused on consistency and scoring. Features streaks, weight tracking, and daily workout grading.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }

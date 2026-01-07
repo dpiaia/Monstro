@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { UserProfile, WorkoutDay } from '../types';
 import { getLevel } from '../constants';
 import { StatCard } from '../components/StatCard';
-import { Activity, Flame, Scale, ChevronRight, Quote } from 'lucide-react';
+import { Activity, Flame, Scale, ChevronRight, Quote, Camera } from 'lucide-react';
 import { getMotivationalTip } from '../services/geminiService';
 
 interface DashboardProps {
     profile: UserProfile;
     todayWorkout?: WorkoutDay;
     onGoToWorkout: () => void;
+    onGoToAnalyzer: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ profile, todayWorkout, onGoToWorkout }) => {
+const Dashboard: React.FC<DashboardProps> = ({ profile, todayWorkout, onGoToWorkout, onGoToAnalyzer }) => {
     const [motivationalQuote, setMotivationalQuote] = useState<string>("Sua única competição é quem você era ontem.");
     
     const exercisesDoneToday = todayWorkout?.exercises.filter(e => e.completed).length || 0;
@@ -74,6 +75,23 @@ const Dashboard: React.FC<DashboardProps> = ({ profile, todayWorkout, onGoToWork
                     </p>
                 </div>
             </header>
+
+            {/* Quick Actions - Analyzer */}
+            <button 
+                onClick={onGoToAnalyzer}
+                className="w-full bg-neutral-900 border border-neutral-800 p-4 rounded-2xl flex items-center justify-between group hover:border-neon-purple transition-all"
+            >
+                <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 rounded-full bg-neon-purple/20 flex items-center justify-center text-neon-purple">
+                        <Camera size={20} />
+                    </div>
+                    <div className="text-left">
+                        <h3 className="text-white font-bold">Analisar Equipamento</h3>
+                        <p className="text-xs text-gray-500">Dúvidas na máquina? Tire uma foto.</p>
+                    </div>
+                </div>
+                <ChevronRight className="text-gray-600 group-hover:text-white" size={20} />
+            </button>
 
             {/* Level Progress */}
             <div className="bg-neutral-900/50 rounded-xl p-4 border border-neutral-800">

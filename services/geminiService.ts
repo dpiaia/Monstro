@@ -19,6 +19,46 @@ const getAI = () => {
   return new GoogleGenAI({ apiKey });
 }
 
+export const analyzeEquipmentImage = async (base64Image: string): Promise<string> => {
+    try {
+        const ai = getAI();
+        if (!ai) return "Erro de configuração da API.";
+
+        const prompt = `
+            Você é um personal trainer experiente do aplicativo 'Eu Monstro'.
+            Analise esta imagem de um equipamento de academia.
+            1. Identifique o nome da máquina ou equipamento.
+            2. Liste os músculos principais trabalhados.
+            3. Explique passo-a-passo, de forma concisa e segura, como executar o exercício corretamente nela.
+            4. Dê uma dica de segurança importante ("Erro comum").
+            
+            Formate a resposta com quebras de linha claras e emojis para facilitar a leitura rápida no celular.
+            Tom de voz: Encorajador e técnico.
+        `;
+
+        // Using Gemini 3 Pro Preview as requested for high quality image reasoning
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            mimeType: 'image/jpeg',
+                            data: base64Image
+                        }
+                    },
+                    { text: prompt }
+                ]
+            }
+        });
+
+        return response.text || "Não consegui identificar o equipamento com clareza. Tente uma foto melhor iluminada.";
+    } catch (error) {
+        console.error("Image Analysis Error", error);
+        return "Ocorreu um erro ao analisar a imagem. Verifique sua conexão.";
+    }
+};
+
 export const getMotivationalTip = async (muscleGroup: string): Promise<string> => {
   try {
     const ai = getAI();
