@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { WorkoutDay, Exercise } from '../types';
-import { ChevronDown, CheckCircle, Circle, AlertTriangle, PlayCircle, Info, Sparkles, X, ArrowRight, Edit3, Save, Plus, Trash2, Calendar } from 'lucide-react';
+import { ChevronDown, CheckCircle, Circle, AlertTriangle, PlayCircle, Info, Sparkles, X, ArrowRight, Edit3, Save, Plus, Trash2, Calendar, Dumbbell, Search } from 'lucide-react';
 import { getMotivationalTip, getWorkoutAdaptation } from '../services/geminiService';
+import { COMMON_EXERCISES } from '../constants';
 
 interface WorkoutViewProps {
     schedule: WorkoutDay[];
@@ -31,6 +32,10 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
     const [showAdaptationModal, setShowAdaptationModal] = useState(false);
     const [isAdapting, setIsAdapting] = useState(false);
     const [suggestedAdaptations, setSuggestedAdaptations] = useState<any[]>([]);
+
+    // Add Exercise Modal State
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Edit Mode State
     const [isEditing, setIsEditing] = useState(false);
@@ -63,22 +68,29 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
         }
     };
 
-    const handleAddExercise = () => {
+    const handleSelectPredefinedExercise = (exData: {name: string, equipment: string, muscle: string}) => {
         if (!selectedWorkout) return;
         const newEx: Exercise = {
             id: Date.now().toString(),
-            name: "Novo Exercício",
-            equipment: "Livre",
+            name: exData.name,
+            equipment: exData.equipment,
             sets: 3,
-            reps: "10",
-            imageUrl: "https://picsum.photos/400/300?grayscale",
-            tips: "Configure os detalhes deste exercício.",
+            reps: "10-12",
+            load: "0kg",
+            imageUrl: `https://picsum.photos/400/300?random=${Math.floor(Math.random() * 1000)}`,
+            tips: `Foco no músculo: ${exData.muscle}`,
             completed: false
         };
         onSaveDayConfig(selectedDayId, {
             ...selectedWorkout,
             exercises: [...selectedWorkout.exercises, newEx]
         });
+        setShowAddModal(false);
+        setSearchTerm("");
+    };
+
+    const handleAddCustomExercise = () => {
+        handleSelectPredefinedExercise({ name: "Novo Exercício", equipment: "Livre", muscle: "Geral" });
     };
 
     const handleRemoveExercise = (exId: string) => {
@@ -126,6 +138,11 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
         onUpdateExerciseDetails(selectedDayId, updates);
         setShowAdaptationModal(false);
     };
+
+    const filteredExercises = COMMON_EXERCISES.filter(e => 
+        e.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        e.muscle.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="flex flex-col h-full bg-neutral-950 relative">
@@ -269,7 +286,7 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
                                                         <Trash2 size={18} />
                                                     </button>
                                                 </div>
-                                                <div className="grid grid-cols-3 gap-2">
+                                                <div className="grid grid-cols-2 gap-3">
                                                     <div>
                                                         <label className="text-[10px] text-gray-500 uppercase">Séries</label>
                                                         <input 
@@ -286,6 +303,16 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
                                                             className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-white text-xs"
                                                             value={exercise.reps}
                                                             onChange={(e) => handleEditExerciseField(exercise.id, 'reps', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-gray-500 uppercase">Carga (kg)</label>
+                                                        <input 
+                                                            type="text"
+                                                            className="w-full bg-neutral-800 border border-neutral-700 rounded p-1 text-white text-xs"
+                                                            value={exercise.load || ''}
+                                                            placeholder="Ex: 20kg"
+                                                            onChange={(e) => handleEditExerciseField(exercise.id, 'load', e.target.value)}
                                                         />
                                                     </div>
                                                     <div>
@@ -331,9 +358,19 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
                                                             <h3 className={`font-bold text-white ${exercise.completed ? 'line-through text-gray-500' : ''}`}>
                                                                 {exercise.name}
                                                             </h3>
-                                                            <div className="flex space-x-3 text-sm text-gray-400">
-                                                                <span>{exercise.sets} Séries</span>
+                                                            <div className="flex items-center space-x-3 text-sm text-gray-400 mt-1">
+                                                                <span>{exercise.sets} Sets</span>
+                                                                <span className="text-gray-600">•</span>
                                                                 <span>{exercise.reps} Reps</span>
+                                                                {exercise.load && (
+                                                                    <>
+                                                                        <span className="text-gray-600">•</span>
+                                                                        <span className="text-neon-yellow font-medium flex items-center">
+                                                                            <Dumbbell size={12} className="mr-1" />
+                                                                            {exercise.load}
+                                                                        </span>
+                                                                    </>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -365,6 +402,12 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
                                                                 <span className="font-semibold mr-2">Equipamento:</span> 
                                                                 {exercise.equipment}
                                                             </div>
+                                                            {exercise.load && (
+                                                                <div className="flex items-center text-sm text-gray-500">
+                                                                    <span className="font-semibold mr-2">Carga:</span> 
+                                                                    {exercise.load}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )}
@@ -377,7 +420,7 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
                              {/* Add Exercise Button (Edit Mode Only) */}
                              {isEditing && !selectedWorkout.isRestDay && (
                                 <button
-                                    onClick={handleAddExercise}
+                                    onClick={() => setShowAddModal(true)}
                                     className="w-full py-3 rounded-xl border-2 border-dashed border-neutral-700 text-gray-400 hover:text-white hover:border-neon-bright flex items-center justify-center space-x-2 transition-all"
                                 >
                                     <Plus size={20} />
@@ -484,6 +527,69 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
                                     </button>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Exercise Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+                    <div className="bg-neutral-900 rounded-3xl w-full max-w-sm border border-neutral-700 overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
+                        <div className="p-4 border-b border-neutral-800 flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-white">Selecionar Exercício</h3>
+                            <button onClick={() => setShowAddModal(false)} className="text-gray-500 hover:text-white">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        
+                        <div className="p-4 border-b border-neutral-800">
+                            <div className="relative">
+                                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                <input 
+                                    type="text" 
+                                    placeholder="Buscar por nome ou músculo..." 
+                                    className="w-full bg-neutral-800 text-white pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-neon-purple/50"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    autoFocus
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-2">
+                            {filteredExercises.length > 0 ? (
+                                <div className="space-y-1">
+                                    {filteredExercises.map((ex, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleSelectPredefinedExercise(ex)}
+                                            className="w-full text-left p-3 rounded-xl hover:bg-neutral-800 flex justify-between items-center group transition-colors"
+                                        >
+                                            <div>
+                                                <div className="font-bold text-white text-sm group-hover:text-neon-bright transition-colors">{ex.name}</div>
+                                                <div className="text-xs text-gray-500">
+                                                    {ex.muscle} • {ex.equipment}
+                                                </div>
+                                            </div>
+                                            <Plus size={16} className="text-gray-600 group-hover:text-white" />
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-gray-500">
+                                    <p>Nenhum exercício encontrado.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-4 border-t border-neutral-800 bg-neutral-900">
+                            <button 
+                                onClick={handleAddCustomExercise}
+                                className="w-full py-3 bg-neutral-800 text-gray-300 font-bold rounded-xl hover:bg-neutral-700 border border-neutral-700"
+                            >
+                                Criar Outro (Personalizado)
+                            </button>
                         </div>
                     </div>
                 </div>

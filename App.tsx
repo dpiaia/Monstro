@@ -4,6 +4,7 @@ import Dashboard from './views/Dashboard';
 import WorkoutView from './views/WorkoutView';
 import Profile from './views/Profile';
 import Settings from './views/Settings';
+import Onboarding from './views/Onboarding';
 import { Screen, UserProfile, WorkoutDay, Exercise } from './types';
 import { INITIAL_PROFILE, MOCK_WORKOUT_SCHEDULE } from './constants';
 import { getPostWorkoutFeedback } from './services/geminiService';
@@ -11,27 +12,47 @@ import { getPostWorkoutFeedback } from './services/geminiService';
 const STORAGE_KEY = 'neonflow_data_v1';
 
 const App: React.FC = () => {
+  // --- STATE INITIALIZATION ---
+  const [isFirstRun, setIsFirstRun] = useState(false);
   const [activeScreen, setActiveScreen] = useState<Screen>('HOME');
-  
-  // Initialize state from LocalStorage or Fallback to Constants
+
   const [profile, setProfile] = useState<UserProfile>(() => {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved).profile : INITIAL_PROFILE;
+      if (saved) {
+          return JSON.parse(saved).profile;
+      }
+      return INITIAL_PROFILE; // Keeps mock data only for type safety fallback, but won't be used if isFirstRun is handled correctly
   });
 
   const [schedule, setSchedule] = useState<WorkoutDay[]>(() => {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved).schedule : MOCK_WORKOUT_SCHEDULE;
+      if (saved) {
+          return JSON.parse(saved).schedule;
+      }
+      return MOCK_WORKOUT_SCHEDULE;
   });
+
+  // Check for first run on mount
+  useEffect(() => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+          setIsFirstRun(true);
+          setActiveScreen('ONBOARDING');
+          // Reset internal state to empty to avoid flashes of mock data behind onboarding
+          // Although UI covers it, it's cleaner.
+      }
+  }, []);
 
   // Persist data whenever it changes
   useEffect(() => {
-      const dataToSave = {
-          profile,
-          schedule
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  }, [profile, schedule]);
+      if (!isFirstRun && activeScreen !== 'ONBOARDING') {
+          const dataToSave = {
+              profile,
+              schedule
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      }
+  }, [profile, schedule, isFirstRun, activeScreen]);
 
   // Determine today's day ID (mon, tue, etc.)
   const getTodayId = () => {
@@ -40,6 +61,20 @@ const App: React.FC = () => {
   };
 
   const [currentDayId] = useState<string>(getTodayId());
+
+  // --- HANDLERS ---
+
+  const handleOnboardingComplete = (newProfile: UserProfile, newSchedule: WorkoutDay[]) => {
+      setProfile(newProfile);
+      setSchedule(newSchedule);
+      setIsFirstRun(false);
+      
+      // Force Save immediately
+      const dataToSave = { profile: newProfile, schedule: newSchedule };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      
+      setActiveScreen('HOME');
+  };
 
   // Function to toggle exercise completion
   const handleUpdateExercise = (dayId: string, exerciseId: string) => {
@@ -172,15 +207,14 @@ const App: React.FC = () => {
   };
 
   const handleClearData = () => {
-      setProfile(INITIAL_PROFILE);
-      setSchedule(MOCK_WORKOUT_SCHEDULE);
       localStorage.removeItem(STORAGE_KEY);
-      alert('Dados resetados para o padrão de fábrica.');
-      setActiveScreen('HOME');
+      window.location.reload(); // Reload to trigger onboarding check
   };
 
   const renderScreen = () => {
     switch (activeScreen) {
+      case 'ONBOARDING':
+          return <Onboarding onComplete={handleOnboardingComplete} />;
       case 'HOME':
         return (
             <Dashboard 

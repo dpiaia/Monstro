@@ -4,12 +4,15 @@ export enum Difficulty {
     HARD = 'Difícil'
 }
 
+export type GoalType = 'LOSE_WEIGHT' | 'GAIN_MUSCLE' | 'ENDURANCE' | 'STRENGTH';
+
 export interface Exercise {
     id: string;
     name: string;
     equipment: string;
     sets: number;
     reps: string;
+    load?: string; // Carga (ex: "20kg", "15lb")
     imageUrl: string;
     videoUrl?: string; // Optional link to video
     tips: string;
@@ -51,10 +54,13 @@ export interface UserProfile {
     height: number; // cm
     startWeight: number;
     currentWeight: number;
+    targetWeight: number; // New: Meta
+    goal: GoalType; // New: Objetivo
+    workoutFrequency: number; // New: Dias por semana
     weightHistory: WeightEntry[];
     streak: number;
     totalExercisesCompleted: number;
     dailyPoints: number; // Gamification points
 }
 
-export type Screen = 'HOME' | 'WORKOUT' | 'PROFILE' | 'SETTINGS';
+export type Screen = 'HOME' | 'WORKOUT' | 'PROFILE' | 'SETTINGS' | 'ONBOARDING';

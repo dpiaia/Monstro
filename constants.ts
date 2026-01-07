@@ -5,6 +5,9 @@ export const INITIAL_PROFILE: UserProfile = {
     height: 175,
     startWeight: 85,
     currentWeight: 82.5,
+    targetWeight: 75,
+    goal: 'LOSE_WEIGHT',
+    workoutFrequency: 4,
     weightHistory: [
         { date: '2023-10-01', weight: 85 },
         { date: '2023-10-08', weight: 84.2 },
@@ -36,6 +39,54 @@ export const getLevel = (points: number): LevelConfig => {
     return LEVELS.find(l => points >= l.minPoints && points < l.maxPoints) || LEVELS[LEVELS.length - 1];
 };
 
+export const COMMON_EXERCISES = [
+    // Peito
+    { name: "Supino Reto", muscle: "Peito", equipment: "Barra" },
+    { name: "Supino Inclinado", muscle: "Peito", equipment: "Halteres" },
+    { name: "Crucifixo", muscle: "Peito", equipment: "Máquina/Halteres" },
+    { name: "Crossover", muscle: "Peito", equipment: "Polia" },
+    { name: "Flexão de Braço", muscle: "Peito", equipment: "Peso do Corpo" },
+    
+    // Costas
+    { name: "Puxada Frontal", muscle: "Costas", equipment: "Máquina" },
+    { name: "Remada Curvada", muscle: "Costas", equipment: "Barra" },
+    { name: "Remada Baixa", muscle: "Costas", equipment: "Polia" },
+    { name: "Barra Fixa", muscle: "Costas", equipment: "Peso do Corpo" },
+    { name: "Serrote", muscle: "Costas", equipment: "Haltere" },
+
+    // Pernas
+    { name: "Agachamento Livre", muscle: "Pernas", equipment: "Barra" },
+    { name: "Leg Press 45", muscle: "Pernas", equipment: "Máquina" },
+    { name: "Cadeira Extensora", muscle: "Pernas", equipment: "Máquina" },
+    { name: "Mesa Flexora", muscle: "Pernas", equipment: "Máquina" },
+    { name: "Stiff", muscle: "Pernas", equipment: "Barra" },
+    { name: "Elevação Pélvica", muscle: "Pernas", equipment: "Barra" },
+    { name: "Panturrilha em Pé", muscle: "Pernas", equipment: "Máquina" },
+
+    // Ombros
+    { name: "Desenvolvimento Militar", muscle: "Ombros", equipment: "Halteres" },
+    { name: "Elevação Lateral", muscle: "Ombros", equipment: "Halteres" },
+    { name: "Elevação Frontal", muscle: "Ombros", equipment: "Halteres" },
+    { name: "Crucifixo Inverso", muscle: "Ombros", equipment: "Máquina" },
+
+    // Bíceps
+    { name: "Rosca Direta", muscle: "Bíceps", equipment: "Barra" },
+    { name: "Rosca Alternada", muscle: "Bíceps", equipment: "Halteres" },
+    { name: "Rosca Martelo", muscle: "Bíceps", equipment: "Halteres" },
+    { name: "Rosca Scott", muscle: "Bíceps", equipment: "Máquina" },
+
+    // Tríceps
+    { name: "Tríceps Corda", muscle: "Tríceps", equipment: "Polia" },
+    { name: "Tríceps Testa", muscle: "Tríceps", equipment: "Barra W" },
+    { name: "Tríceps Francês", muscle: "Tríceps", equipment: "Halteres" },
+    { name: "Mergulho", muscle: "Tríceps", equipment: "Paralelas" },
+
+    // Abdômen/Core
+    { name: "Abdominal Supra", muscle: "Abdômen", equipment: "Solo" },
+    { name: "Prancha", muscle: "Abdômen", equipment: "Solo" },
+    { name: "Elevação de Pernas", muscle: "Abdômen", equipment: "Barra" }
+];
+
 // Placeholder images from picsum
 export const MOCK_WORKOUT_SCHEDULE: WorkoutDay[] = [
     {
@@ -47,10 +98,10 @@ export const MOCK_WORKOUT_SCHEDULE: WorkoutDay[] = [
         completed: false,
         score: 'PENDING',
         exercises: [
-            { id: '1', name: 'Supino Reto', equipment: 'Barra', sets: 4, reps: '10-12', imageUrl: 'https://picsum.photos/400/300?random=1', tips: 'Mantenha os cotovelos a 45 graus.', completed: false },
-            { id: '2', name: 'Supino Inclinado', equipment: 'Halteres', sets: 3, reps: '12', imageUrl: 'https://picsum.photos/400/300?random=2', tips: 'Controle a descida.', completed: false },
-            { id: '3', name: 'Crossover', equipment: 'Polia', sets: 3, reps: '15', imageUrl: 'https://picsum.photos/400/300?random=3', tips: 'Foque na contração no final.', completed: false },
-            { id: '4', name: 'Tríceps Corda', equipment: 'Polia', sets: 4, reps: '12-15', imageUrl: 'https://picsum.photos/400/300?random=4', tips: 'Não mova os ombros.', completed: false },
+            { id: '1', name: 'Supino Reto', equipment: 'Barra', sets: 4, reps: '10-12', load: '20kg', imageUrl: 'https://picsum.photos/400/300?random=1', tips: 'Mantenha os cotovelos a 45 graus.', completed: false },
+            { id: '2', name: 'Supino Inclinado', equipment: 'Halteres', sets: 3, reps: '12', load: '18kg', imageUrl: 'https://picsum.photos/400/300?random=2', tips: 'Controle a descida.', completed: false },
+            { id: '3', name: 'Crossover', equipment: 'Polia', sets: 3, reps: '15', load: '15kg', imageUrl: 'https://picsum.photos/400/300?random=3', tips: 'Foque na contração no final.', completed: false },
+            { id: '4', name: 'Tríceps Corda', equipment: 'Polia', sets: 4, reps: '12-15', load: '10kg', imageUrl: 'https://picsum.photos/400/300?random=4', tips: 'Não mova os ombros.', completed: false },
         ]
     },
     {
@@ -62,9 +113,9 @@ export const MOCK_WORKOUT_SCHEDULE: WorkoutDay[] = [
         completed: false,
         score: 'PENDING',
         exercises: [
-            { id: '5', name: 'Puxada Frontal', equipment: 'Máquina', sets: 4, reps: '10-12', imageUrl: 'https://picsum.photos/400/300?random=5', tips: 'Puxe com os cotovelos.', completed: false },
-            { id: '6', name: 'Remada Curvada', equipment: 'Barra', sets: 3, reps: '10', imageUrl: 'https://picsum.photos/400/300?random=6', tips: 'Mantenha a coluna reta.', completed: false },
-            { id: '7', name: 'Rosca Direta', equipment: 'Barra W', sets: 3, reps: '12', imageUrl: 'https://picsum.photos/400/300?random=7', tips: 'Não balance o tronco.', completed: false },
+            { id: '5', name: 'Puxada Frontal', equipment: 'Máquina', sets: 4, reps: '10-12', load: '35kg', imageUrl: 'https://picsum.photos/400/300?random=5', tips: 'Puxe com os cotovelos.', completed: false },
+            { id: '6', name: 'Remada Curvada', equipment: 'Barra', sets: 3, reps: '10', load: '15kg', imageUrl: 'https://picsum.photos/400/300?random=6', tips: 'Mantenha a coluna reta.', completed: false },
+            { id: '7', name: 'Rosca Direta', equipment: 'Barra W', sets: 3, reps: '12', load: '8kg', imageUrl: 'https://picsum.photos/400/300?random=7', tips: 'Não balance o tronco.', completed: false },
         ]
     },
     {
@@ -88,9 +139,9 @@ export const MOCK_WORKOUT_SCHEDULE: WorkoutDay[] = [
         completed: false,
         score: 'PENDING',
         exercises: [
-            { id: '9', name: 'Agachamento Livre', equipment: 'Barra', sets: 4, reps: '8-10', imageUrl: 'https://picsum.photos/400/300?random=9', tips: 'Quebre a paralela.', completed: false },
-            { id: '10', name: 'Leg Press 45', equipment: 'Máquina', sets: 3, reps: '12', imageUrl: 'https://picsum.photos/400/300?random=10', tips: 'Não trave os joelhos.', completed: false },
-            { id: '11', name: 'Cadeira Extensora', equipment: 'Máquina', sets: 3, reps: '15', imageUrl: 'https://picsum.photos/400/300?random=11', tips: 'Segure 1s no topo.', completed: false },
+            { id: '9', name: 'Agachamento Livre', equipment: 'Barra', sets: 4, reps: '8-10', load: '30kg', imageUrl: 'https://picsum.photos/400/300?random=9', tips: 'Quebre a paralela.', completed: false },
+            { id: '10', name: 'Leg Press 45', equipment: 'Máquina', sets: 3, reps: '12', load: '80kg', imageUrl: 'https://picsum.photos/400/300?random=10', tips: 'Não trave os joelhos.', completed: false },
+            { id: '11', name: 'Cadeira Extensora', equipment: 'Máquina', sets: 3, reps: '15', load: '40kg', imageUrl: 'https://picsum.photos/400/300?random=11', tips: 'Segure 1s no topo.', completed: false },
         ]
     },
     {
@@ -102,8 +153,8 @@ export const MOCK_WORKOUT_SCHEDULE: WorkoutDay[] = [
         completed: false,
         score: 'PENDING',
         exercises: [
-            { id: '12', name: 'Desenvolvimento Militar', equipment: 'Halteres', sets: 4, reps: '10', imageUrl: 'https://picsum.photos/400/300?random=12', tips: 'Estenda completamente.', completed: false },
-            { id: '13', name: 'Elevação Lateral', equipment: 'Halteres', sets: 4, reps: '15', imageUrl: 'https://picsum.photos/400/300?random=13', tips: 'Foque no deltóide lateral.', completed: false },
+            { id: '12', name: 'Desenvolvimento Militar', equipment: 'Halteres', sets: 4, reps: '10', load: '14kg', imageUrl: 'https://picsum.photos/400/300?random=12', tips: 'Estenda completamente.', completed: false },
+            { id: '13', name: 'Elevação Lateral', equipment: 'Halteres', sets: 4, reps: '15', load: '8kg', imageUrl: 'https://picsum.photos/400/300?random=13', tips: 'Foque no deltóide lateral.', completed: false },
             { id: '14', name: 'Prancha Abdominal', equipment: 'Solo', sets: 3, reps: '1 min', imageUrl: 'https://picsum.photos/400/300?random=14', tips: 'Contraia o core.', completed: false },
         ]
     },
@@ -116,7 +167,7 @@ export const MOCK_WORKOUT_SCHEDULE: WorkoutDay[] = [
         completed: false,
         score: 'PENDING',
         exercises: [
-            { id: '15', name: 'Levantamento Terra', equipment: 'Barra', sets: 3, reps: '6-8', imageUrl: 'https://picsum.photos/400/300?random=15', tips: 'Técnica perfeita é essencial.', completed: false },
+            { id: '15', name: 'Levantamento Terra', equipment: 'Barra', sets: 3, reps: '6-8', load: '40kg', imageUrl: 'https://picsum.photos/400/300?random=15', tips: 'Técnica perfeita é essencial.', completed: false },
         ]
     },
     {

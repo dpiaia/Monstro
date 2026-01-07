@@ -109,7 +109,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, onImport, onExport, onClear
             </div>
             
             <div className="text-center text-xs text-neutral-700 mt-8">
-                NeonFlow Gym Tracker v1.0 <br/>
+                Eu Monstro Gym Tracker v1.0 <br/>
                 Local Data Storage
             </div>
         </div>
