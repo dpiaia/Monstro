@@ -59,6 +59,37 @@ export const analyzeEquipmentImage = async (base64Image: string): Promise<string
     }
 };
 
+export const searchExerciseVideo = async (exerciseName: string): Promise<string | null> => {
+    try {
+        const ai = getAI();
+        if (!ai) return null;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: `Find the best YouTube video tutorial for the exercise: "${exerciseName}". Return a short confirmation text.`,
+            config: {
+                tools: [{ googleSearch: {} }],
+            },
+        });
+
+        // Extract URL from grounding chunks
+        const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+        
+        if (chunks) {
+            for (const chunk of chunks) {
+                if (chunk.web?.uri && (chunk.web.uri.includes('youtube.com') || chunk.web.uri.includes('youtu.be'))) {
+                    return chunk.web.uri;
+                }
+            }
+        }
+        
+        return null;
+    } catch (error) {
+        console.error("Video Search Error", error);
+        return null;
+    }
+};
+
 export const getMotivationalTip = async (muscleGroup: string): Promise<string> => {
   try {
     const ai = getAI();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { WorkoutDay, Exercise } from '../types';
-import { ChevronDown, CheckCircle, Circle, AlertTriangle, PlayCircle, Info, Sparkles, X, ArrowRight, Edit3, Save, Plus, Trash2, Calendar, Dumbbell, Search } from 'lucide-react';
-import { getMotivationalTip, getWorkoutAdaptation } from '../services/geminiService';
+import { ChevronDown, CheckCircle, Circle, AlertTriangle, PlayCircle, Info, Sparkles, X, ArrowRight, Edit3, Save, Plus, Trash2, Calendar, Dumbbell, Search, Youtube } from 'lucide-react';
+import { getMotivationalTip, getWorkoutAdaptation, searchExerciseVideo } from '../services/geminiService';
 import { COMMON_EXERCISES } from '../constants';
 
 interface WorkoutViewProps {
@@ -27,6 +27,7 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
     const [aiTip, setAiTip] = useState<string>("");
     const [loadingTip, setLoadingTip] = useState(false);
     const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
+    const [loadingVideo, setLoadingVideo] = useState<string | null>(null);
     
     // Adaptation State
     const [showAdaptationModal, setShowAdaptationModal] = useState(false);
@@ -52,6 +53,26 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
             });
         }
     }, [selectedDayId, selectedWorkout?.muscleGroup, isEditing]); // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // Video Fetching Logic
+    useEffect(() => {
+        const fetchVideo = async () => {
+            if (expandedExercise && selectedWorkout) {
+                const exercise = selectedWorkout.exercises.find(e => e.id === expandedExercise);
+                // Only fetch if we don't have a video yet and aren't already fetching
+                if (exercise && !exercise.videoUrl && loadingVideo !== exercise.id) {
+                    setLoadingVideo(exercise.id);
+                    const url = await searchExerciseVideo(exercise.name);
+                    if (url) {
+                        onUpdateExerciseDetails(selectedDayId, [{ id: exercise.id, videoUrl: url }]);
+                    }
+                    setLoadingVideo(null);
+                }
+            }
+        };
+        fetchVideo();
+    }, [expandedExercise, selectedDayId]); // eslint-disable-next-line react-hooks/exhaustive-deps
+
 
     // Handlers for Manual Editing
     const handleUpdateLabel = (val: string) => {
@@ -143,6 +164,14 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
         e.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         e.muscle.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // Helper to get embed URL
+    const getEmbedUrl = (url: string) => {
+        // Simple regex to extract ID from standard YT urls
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+    };
 
     return (
         <div className="flex flex-col h-full bg-neutral-950 relative">
@@ -383,15 +412,54 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
                                                 {/* Expanded Content */}
                                                 {expandedExercise === exercise.id && (
                                                     <div className="px-4 pb-4 border-t border-neutral-800 bg-neutral-900/50">
-                                                        <div className="mt-4 rounded-xl overflow-hidden h-40 bg-black relative">
-                                                            <img 
-                                                                src={exercise.imageUrl} 
-                                                                alt={exercise.name} 
-                                                                className="w-full h-full object-cover opacity-80"
-                                                            />
-                                                            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                                                                <PlayCircle size={40} className="text-white/80" />
-                                                            </div>
+                                                        <div className="mt-4 rounded-xl overflow-hidden h-48 bg-black relative border border-neutral-800">
+                                                            {loadingVideo === exercise.id ? (
+                                                                <div className="w-full h-full flex flex-col items-center justify-center space-y-3">
+                                                                    <div className="w-8 h-8 rounded-full border-2 border-neon-purple border-t-transparent animate-spin"></div>
+                                                                    <p className="text-xs text-neon-purple font-bold animate-pulse">Buscando tutorial no YouTube...</p>
+                                                                </div>
+                                                            ) : exercise.videoUrl ? (
+                                                                getEmbedUrl(exercise.videoUrl) ? (
+                                                                    <iframe
+                                                                        width="100%"
+                                                                        height="100%"
+                                                                        src={getEmbedUrl(exercise.videoUrl)!}
+                                                                        title={exercise.name}
+                                                                        frameBorder="0"
+                                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                        allowFullScreen
+                                                                    ></iframe>
+                                                                ) : (
+                                                                     <div className="w-full h-full flex flex-col items-center justify-center">
+                                                                        <p className="text-sm text-gray-500 mb-2">Vídeo encontrado, mas não incorporável.</p>
+                                                                        <a href={exercise.videoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-neon-bright hover:underline">
+                                                                            <Youtube size={20} />
+                                                                            <span>Assistir no YouTube</span>
+                                                                        </a>
+                                                                     </div>
+                                                                )
+                                                            ) : (
+                                                                // Fallback if search failed
+                                                                <>
+                                                                    <img 
+                                                                        src={exercise.imageUrl} 
+                                                                        alt={exercise.name} 
+                                                                        className="w-full h-full object-cover opacity-60"
+                                                                    />
+                                                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                                                                         <p className="text-gray-300 text-xs mb-2">Vídeo não encontrado</p>
+                                                                         <a 
+                                                                            href={`https://www.youtube.com/results?search_query=como+fazer+${encodeURIComponent(exercise.name)}`} 
+                                                                            target="_blank" 
+                                                                            rel="noopener noreferrer"
+                                                                            className="px-4 py-2 bg-red-600 rounded-full text-white text-xs font-bold flex items-center space-x-2 hover:bg-red-500"
+                                                                         >
+                                                                            <Youtube size={16} />
+                                                                            <span>Buscar Manualmente</span>
+                                                                         </a>
+                                                                    </div>
+                                                                </>
+                                                            )}
                                                         </div>
                                                         <div className="mt-4 space-y-2">
                                                             <div className="flex items-start text-sm text-gray-400">
