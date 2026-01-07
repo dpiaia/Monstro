@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserProfile, WorkoutDay } from '../types';
 import { getLevel } from '../constants';
 import { StatCard } from '../components/StatCard';
-import { Activity, Flame, Scale, ChevronRight, Trophy, Quote } from 'lucide-react';
+import { Activity, Flame, Scale, ChevronRight, Quote } from 'lucide-react';
 import { getMotivationalTip } from '../services/geminiService';
 
 interface DashboardProps {

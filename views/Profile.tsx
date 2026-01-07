@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserProfile, MonthlyStats } from '../types';
+import { UserProfile } from '../types';
 import { MOCK_MONTHLY_STATS, getLevel } from '../constants';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Plus, Trash2, Save, Award, Calendar } from 'lucide-react';

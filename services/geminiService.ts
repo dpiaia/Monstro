@@ -1,6 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 import { Exercise } from "../types";
 
+// Declare process manually to avoid TypeScript errors in client-side code 
+// if @types/node is missing or not included in the client tsconfig.
+declare const process: {
+  env: {
+    API_KEY: string | undefined;
+  }
+};
+
 // Helper to get AI instance safely.
 // This prevents the app from crashing with a white/black screen on startup 
 // if the API_KEY environment variable is missing in Vercel.

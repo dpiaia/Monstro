@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './views/Dashboard';
 import WorkoutView from './views/WorkoutView';
@@ -20,7 +20,7 @@ const App: React.FC = () => {
     return days[new Date().getDay()];
   };
 
-  const [currentDayId, setCurrentDayId] = useState<string>(getTodayId());
+  const [currentDayId] = useState<string>(getTodayId());
 
   // Function to toggle exercise completion
   const handleUpdateExercise = (dayId: string, exerciseId: string) => {
