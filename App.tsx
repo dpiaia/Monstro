@@ -1,18 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './views/Dashboard';
 import WorkoutView from './views/WorkoutView';
 import Profile from './views/Profile';
+import Settings from './views/Settings';
 import { Screen, UserProfile, WorkoutDay, Exercise } from './types';
 import { INITIAL_PROFILE, MOCK_WORKOUT_SCHEDULE } from './constants';
 import { getPostWorkoutFeedback } from './services/geminiService';
 
+const STORAGE_KEY = 'neonflow_data_v1';
+
 const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<Screen>('HOME');
   
-  // State for user profile and schedule
-  const [profile, setProfile] = useState<UserProfile>(INITIAL_PROFILE);
-  const [schedule, setSchedule] = useState<WorkoutDay[]>(MOCK_WORKOUT_SCHEDULE);
+  // Initialize state from LocalStorage or Fallback to Constants
+  const [profile, setProfile] = useState<UserProfile>(() => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved).profile : INITIAL_PROFILE;
+  });
+
+  const [schedule, setSchedule] = useState<WorkoutDay[]>(() => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved).schedule : MOCK_WORKOUT_SCHEDULE;
+  });
+
+  // Persist data whenever it changes
+  useEffect(() => {
+      const dataToSave = {
+          profile,
+          schedule
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+  }, [profile, schedule]);
 
   // Determine today's day ID (mon, tue, etc.)
   const getTodayId = () => {
@@ -120,6 +139,46 @@ const App: React.FC = () => {
       }));
   };
 
+  // --- DATA MANAGEMENT HANDLERS ---
+
+  const handleImportData = (file: File) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+          try {
+              const text = e.target?.result as string;
+              const data = JSON.parse(text);
+              if (data.profile && data.schedule) {
+                  setProfile(data.profile);
+                  setSchedule(data.schedule);
+                  alert('Dados importados com sucesso!');
+                  setActiveScreen('PROFILE');
+              } else {
+                  alert('Arquivo inválido. Formato incorreto.');
+              }
+          } catch (err) {
+              alert('Erro ao ler arquivo. Certifique-se que é um JSON válido.');
+          }
+      };
+      reader.readAsText(file);
+  };
+
+  const handleExportData = () => {
+      const data = { profile, schedule };
+      const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(JSON.stringify(data))}`;
+      const link = document.createElement("a");
+      link.href = jsonString;
+      link.download = `neonflow_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+  };
+
+  const handleClearData = () => {
+      setProfile(INITIAL_PROFILE);
+      setSchedule(MOCK_WORKOUT_SCHEDULE);
+      localStorage.removeItem(STORAGE_KEY);
+      alert('Dados resetados para o padrão de fábrica.');
+      setActiveScreen('HOME');
+  };
+
   const renderScreen = () => {
     switch (activeScreen) {
       case 'HOME':
@@ -147,8 +206,18 @@ const App: React.FC = () => {
             <Profile 
                 profile={profile}
                 onUpdateWeight={handleUpdateWeight}
+                onGoToSettings={() => setActiveScreen('SETTINGS')}
             />
         );
+      case 'SETTINGS':
+        return (
+            <Settings 
+                onBack={() => setActiveScreen('PROFILE')}
+                onImport={handleImportData}
+                onExport={handleExportData}
+                onClear={handleClearData}
+            />
+        )
       default:
         return null;
     }

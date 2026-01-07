@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { MOCK_MONTHLY_STATS, getLevel } from '../constants';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Plus, Trash2, Save, Award, Calendar } from 'lucide-react';
+import { Plus, Trash2, Save, Award, Calendar, Settings } from 'lucide-react';
 
 interface ProfileProps {
     profile: UserProfile;
     onUpdateWeight: (newWeight: number) => void;
+    onGoToSettings?: () => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ profile, onUpdateWeight }) => {
+const Profile: React.FC<ProfileProps> = ({ profile, onUpdateWeight, onGoToSettings }) => {
     const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY'>('OVERVIEW');
     const [isWeighing, setIsWeighing] = useState(false);
     const [newWeightInput, setNewWeightInput] = useState(profile.currentWeight.toString());
@@ -40,11 +41,17 @@ const Profile: React.FC<ProfileProps> = ({ profile, onUpdateWeight }) => {
 
     return (
         <div className="p-6 space-y-8 animate-fade-in pb-32">
-             <header className="flex justify-between items-center">
+             <header className="flex justify-between items-start">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Seu Perfil</h1>
                     <p className="text-gray-400 text-sm">Acompanhe sua evolução.</p>
                 </div>
+                <button 
+                    onClick={onGoToSettings}
+                    className="p-2 rounded-full bg-neutral-800 text-gray-400 hover:text-white hover:bg-neutral-700 transition-colors"
+                >
+                    <Settings size={20} />
+                </button>
             </header>
 
             {/* Tabs */}
