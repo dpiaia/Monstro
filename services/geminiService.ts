@@ -9,7 +9,7 @@ export const getMotivationalTip = async (muscleGroup: string): Promise<string> =
       model: 'gemini-3-flash-preview',
       contents: `Give me a short, intense, one-sentence motivational tip for a gym goer training ${muscleGroup} today. Keep it under 20 words. Tone: Personal Trainer, tough love.`,
     });
-    return response.text.trim();
+    return response.text?.trim() || "Foco total hoje. Sem desculpas.";
   } catch (error) {
     console.error("Gemini API Error:", error);
     return "Foco total hoje. Sem desculpas.";
@@ -22,7 +22,7 @@ export const getPostWorkoutFeedback = async (score: string, muscleGroup: string)
             model: 'gemini-3-flash-preview',
             contents: `The user just finished a ${muscleGroup} workout. Their performance score was ${score} (GOOD=Perfect, MEDIUM=Modified, BAD=Skipped/Poor). Give a 2-sentence feedback.`,
         });
-        return response.text.trim();
+        return response.text?.trim() || "Bom trabalho. Continue consistente.";
     } catch (error) {
         return "Bom trabalho. Continue consistente.";
     }
@@ -54,7 +54,8 @@ export const getWorkoutAdaptation = async (exercises: Exercise[], difficulty: 'E
             }
         });
         
-        const jsonText = response.text.trim();
+        const jsonText = response.text?.trim();
+        if (!jsonText) return [];
         return JSON.parse(jsonText);
     } catch (error) {
         console.error("AI Adaptation Error", error);
